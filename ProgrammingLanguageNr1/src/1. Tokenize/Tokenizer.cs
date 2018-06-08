@@ -61,6 +61,10 @@ namespace ProgrammingLanguageNr1
 					case ' ': case '\t': case ';':
 						readNextChar();
 						continue;
+
+                    case '\\':
+                        SKIP_LINE();
+                        continue;
 						
 					case '#':
 	                    if (m_stripOutComments)
@@ -97,8 +101,8 @@ namespace ProgrammingLanguageNr1
 
 				    case '\'':
 						return QUOTED_STRING(false);
-						
-					case ',':
+
+                    case ',':
 						return COMMA();
 
 					case '.':
@@ -175,7 +179,17 @@ namespace ProgrammingLanguageNr1
 			}
 			return new Token(Token.TokenType.NEW_LINE, "<NEW_LINE>");
 		}
-		
+
+        private void SKIP_LINE()
+        {
+            while (m_currentChar != '\n' && m_currentChar != WINDOWS_LINE_ENDING_CRAP)
+            {
+                readNextChar();
+            }
+            readNextChar();
+            m_currentLine++;
+            m_currentPosition = 0;
+        }
 		private Token OPERATOR ()
 		{
 			StringBuilder tokenString = new StringBuilder ();
@@ -318,7 +332,7 @@ namespace ProgrammingLanguageNr1
             {
                 tokenType = Token.TokenType.BUILT_IN_TYPE_NAME;
             }
-			else if (tsLowercase == "bool")
+            else if (tsLowercase == "bool")
             {
                 tokenType = Token.TokenType.BUILT_IN_TYPE_NAME;
             }

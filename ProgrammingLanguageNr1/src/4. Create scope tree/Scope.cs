@@ -46,7 +46,10 @@ namespace ProgrammingLanguageNr1
 		public virtual string getName() {
 			return m_name;
 		}
-		
+		public List<string> list()
+        {
+            return new List<string>(m_symbols.Keys);
+        }
 		public Symbol resolve(string name) {
 			if (m_symbols.ContainsKey(name)) {
 				return m_symbols[name];

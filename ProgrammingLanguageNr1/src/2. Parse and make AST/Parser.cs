@@ -503,7 +503,7 @@ namespace ProgrammingLanguageNr1
 				                                         operandToken.getTokenString(),
 				                                         operandToken.getTokenString()));
 			}
-			else if (lookAheadType(1) == Token.TokenType.BOOLEAN_VALUE) 
+            else if (lookAheadType(1) == Token.TokenType.BOOLEAN_VALUE) 
 			{
 				Token operandToken = match(Token.TokenType.BOOLEAN_VALUE);
 				bool boolean = operandToken.getTokenString().ToLower() == "true" ? true : false;

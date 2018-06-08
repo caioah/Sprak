@@ -63,15 +63,23 @@ namespace ProgrammingLanguageNr1
 				new FunctionDocumentation("Check if an index is in the array", new string[] { "The array to check in", "The index to check for in the array" });
 			result.Add(new FunctionDefinition("bool", "HasIndex", new string[] { "array", "var" }, new string[] { "array", "key" }, new ExternalFunctionCreator.OnFunctionCall(API_hasKey), functionDoc_HasIndex));
 
-			FunctionDocumentation functionDoc_Append =
+            FunctionDocumentation functionDoc_HasElement =
+                new FunctionDocumentation("Check if an element is in the array", new string[] { "The array to check in", "The element to check for in the array" });
+            result.Add(new FunctionDefinition("bool", "HasElement", new string[] { "array", "var" }, new string[] { "array", "elem" }, new ExternalFunctionCreator.OnFunctionCall(API_hasElem), functionDoc_HasElement));
+
+            FunctionDocumentation functionDoc_IndexOf =
+                new FunctionDocumentation("Get the index of an element in the array", new string[] { "The array to check in", "The element to check for in the array" });
+            result.Add(new FunctionDefinition("number", "IndexOf", new string[] { "array", "var" }, new string[] { "array", "elem" }, new ExternalFunctionCreator.OnFunctionCall(API_indexOf), functionDoc_IndexOf));
+
+            FunctionDocumentation functionDoc_Append =
 				new FunctionDocumentation("Add an element to the end of an array", new string[] { "The array to add an element to", "The element to add" });
 			result.Add(new FunctionDefinition("void", "Append", new string[] { "array", "var" }, new string[] { "array", "elem" }, new ExternalFunctionCreator.OnFunctionCall(API_append), functionDoc_Append));
-
-#if TYPE_FUNCTION
+            
+            //#if TYPE_FUNCTION
             FunctionDocumentation functionDoc_type =
                 new FunctionDocumentation("Get the type of something (returns a string)", new string[] { "The value to get the type of" });
             result.Add(new FunctionDefinition("string", "Type", new string[] { "var" }, new string[] { "value" }, new ExternalFunctionCreator.OnFunctionCall(API_type), functionDoc_type));
-#endif
+//#endif
 
 			FunctionDocumentation functionDoc_Round =
 				new FunctionDocumentation("Round a number to the nearest integer", new string[] { "The number to round" });
@@ -272,8 +280,11 @@ namespace ProgrammingLanguageNr1
 			FunctionDocumentation functionDoc_HasFunction =
 				new FunctionDocumentation("Check if a function exists on the object", new string[] { "The name of the function" });
 			allFunctionDefinitions.Add(new FunctionDefinition("bool", "HasFunction", new string[] { "string" }, new string[] { "functionName" }, new ExternalFunctionCreator.OnFunctionCall(API_hasFunction), functionDoc_HasFunction));
+            FunctionDocumentation functionDoc_ListFunctions =
+                new FunctionDocumentation("List all functions on the object", new string[] { });
+            allFunctionDefinitions.Add(new FunctionDefinition("array", "ListFunctions", new string[] {  }, new string[] { }, new ExternalFunctionCreator.OnFunctionCall(API_listFunction), functionDoc_ListFunctions));
 
-			ExternalFunctionCreator externalFunctionCreator = new ExternalFunctionCreator(allFunctionDefinitions.ToArray());
+            ExternalFunctionCreator externalFunctionCreator = new ExternalFunctionCreator(allFunctionDefinitions.ToArray());
             AST functionList = ast.getChild(1);
 
             foreach (AST externalFunction in externalFunctionCreator.FunctionASTs)
@@ -352,6 +363,24 @@ namespace ProgrammingLanguageNr1
 			object index = args[1];
 			return array.ContainsKey (new KeyWrapper(index));
 		}
+
+        private static object API_hasElem(object[] args)
+        {
+            object elem = args[1];
+            SortedDictionary<KeyWrapper, object> array = args[0] as SortedDictionary<KeyWrapper, object>;
+            return array.ContainsValue(elem);
+        }
+
+        private static object API_indexOf(object[] args)
+        {
+            object elem = args[1];
+            SortedDictionary<KeyWrapper, object> array = args[0] as SortedDictionary<KeyWrapper, object>;
+            if (!array.ContainsValue(elem))
+            {
+                throw new Error("Can't find element '" + elem.ToString() + "' in array");
+            }
+            return (float)array.Values.ToList().IndexOf(elem);
+        }
 
         private static object API_removeElement(object[] args)
         {
@@ -444,28 +473,20 @@ namespace ProgrammingLanguageNr1
         private static object API_range(object[] args)
         {
 			int start = (int)(float)args[0];
-			int end = (int)(float)args[1];
+			int end = ((int)(float)args[1]);
+            int step = start < end ? 1 : -1;
 
-			if (Math.Abs (start - end) > 50) {
+            if (Math.Abs (start - end) > 50) {
 				// Create a range
-				int step = start < end ? 1 : -1;
-				var range = new Range (start, end, step);
+				var range = new Range (start, end - step, step);
 				//Console.WriteLine ("Created a range: " + range.ToString ());
 				return range;
 			} else {
 				// Create a normal array
 				SortedDictionary<KeyWrapper, object> array = new SortedDictionary<KeyWrapper, object> ();
 			
-				int step = 0;
-				if (start < end) { 
-					step = 1;
-					end++;
-				} else {
-					step = -1;
-					end--;
-				}		
 				int index = 0;
-				for (int nr = start; nr != end; nr += step) {
+                for (int nr = start; nr != end; nr += step) {
 					//Console.WriteLine("nr: " + nr);
 					array [new KeyWrapper((float)index)] = (float)nr;
 					index++;
@@ -512,6 +533,17 @@ namespace ProgrammingLanguageNr1
 		private object API_hasFunction(object[] args) {
 			return HasFunction(args[0] as String);
 		}
+        private object API_listFunction(object[] args)
+        {
+            SortedDictionary<KeyWrapper, object> lst = new SortedDictionary<KeyWrapper, object>();
+            if (m_interpreter == null) { return lst; }
+            List<string> names = m_interpreter.listFunction();
+            for (int i = 0; i < names.Count; i++)
+            {
+                lst.Add(new KeyWrapper(i), names[i]);
+            }
+            return lst;
+        }
 		
 		private Scope CreateScopeTree(AST ast)
         {

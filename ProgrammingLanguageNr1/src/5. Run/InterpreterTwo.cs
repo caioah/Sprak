@@ -180,8 +180,13 @@ namespace ProgrammingLanguageNr1
 		public bool HasFunction(string functionName) {
 			return m_globalScope.resolve(functionName) != null;
 		}
+        
+        public List<string> listFunction()
+        {
+            return m_globalScope.list();
+        }
 
-		public enum ProgramFunctionCallStatus {
+        public enum ProgramFunctionCallStatus {
 			NO_FUNCTION,
 			EXTERNAL_FUNCTION,
 			NORMAL_FUNCTION,
